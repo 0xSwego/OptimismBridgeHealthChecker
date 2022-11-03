@@ -37,12 +37,6 @@ export async function* CheckOptimismBridgeStatus(): AsyncGenerator<IStatus> {
             return;
         }
 
-        yield { severity: Severity.Checking, text: "Checking if L2 proxy is paused..." };
-        if (await CheckIfProxyIsPaused(L2RpcURL, L2BridgeAddress)) {
-            yield { severity: Severity.Danger, text: "L2 Proxy is paused" };
-            return;
-        }
-
         yield { severity: Severity.Checking, text: "Retrieving flow for L1 bridge..." };
         const l1Stats = await CheckL1Flows();
 
@@ -53,6 +47,13 @@ export async function* CheckOptimismBridgeStatus(): AsyncGenerator<IStatus> {
             // The number of ETH withdrawn in the L2 is greater than the amount deposited in the L1
             const text = "Amount of ETH withdrawn higher than the amount deposited. Possible hack.";
             yield { severity: Severity.Danger, text };
+            return;
+        }
+
+        if (l2Stats.deposited.lt(l1Stats.deposited.mul(90).div(100))) {
+            // The number of ETH withdrawn in the L2 is less than 90% of the ones deposited in the L1
+            const text = "L2 bridge seems to be processing the transactions in a slow way.";
+            yield { severity: Severity.Warning, text };
             return;
         }
 
@@ -102,8 +103,6 @@ const CheckL1Flows = async (): Promise<{ deposited: BigNumber; withdrawn: BigNum
     const withdrawals = withdrawEvents.map((e) => e.args![2] as BigNumber);
     const withdrawalsSum = withdrawals.reduce((prev, curr) => prev.add(curr), BigNumber.from(0));
 
-    console.log({ deposits, withdrawals });
-
     console.log({
         _message: "ETH stats for the last 600 blocks",
         deposits: bigNumberToFloat(depositsSum),
@@ -140,12 +139,10 @@ const CheckL2Flows = async (): Promise<{ deposited: BigNumber; withdrawn: BigNum
         .map((e) => e.args![4] as BigNumber);
     const withdrawalsSum = withdrawals.reduce((prev, curr) => prev.add(curr), BigNumber.from(0));
 
-    console.log({ deposits, withdrawals });
-
     console.log({
         _message: "ETH stats for the last 600 blocks",
         deposits: bigNumberToFloat(depositsSum),
         withdrawals: bigNumberToFloat(withdrawalsSum)
     });
-    return { deposited: BigNumber.from(0), withdrawn: BigNumber.from(0) };
+    return { deposited: depositsSum, withdrawn: withdrawalsSum };
 };
