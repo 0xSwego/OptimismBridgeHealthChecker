@@ -1,18 +1,19 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import "./constants.css";
 import "./app.css";
 import "./fonts.css";
 import { CheckOptimismBridgeStatus, IStatus, Severity } from "./logic";
 
 export const App = () => {
-    const [status, setStatus] = useState<IStatus>({ severity: Severity.Unknown });
-    const [isLoading, setIsLoading] = useState<boolean>(false);
+    const [isRunning, setIsRunning] = useState<boolean>(false);
+    const [status, setStatus] = useState<IStatus>({ severity: Severity.Unknown, text: "Checks not ran yet" });
 
     const checkStatus = async () => {
-        setIsLoading((current) => true);
-        const status = await CheckOptimismBridgeStatus();
-        setStatus(status);
-        setIsLoading((current) => false);
+        setIsRunning((current) => true);
+        for await (const status of CheckOptimismBridgeStatus()) {
+            setStatus((current) => status);
+        }
+        setIsRunning((current) => false);
     };
 
     return (
@@ -23,16 +24,15 @@ export const App = () => {
                 <div className="checker__label">
                     Press this button to check the current status of the Optimism Bridge
                 </div>
-                <button onClick={checkStatus} className="checker__button">
+                <button disabled={isRunning} onClick={checkStatus} className="checker__button">
                     Check
                 </button>
-                {isLoading ? (
-                    <div className="checker__result checker__result--loading">Loading...</div>
-                ) : (
-                    <div className={`checker__result checker__result--${status.severity}`}>
-                        {status.text}
-                    </div>
-                )}
+                <div className="checker__result">
+                    <div
+                        className={`checker__result-icon checker__result-icon--${status.severity}`}
+                    />
+                    <div className={`checker__result-text`}>{status.text}</div>
+                </div>
             </div>
 
             <div className="credits">By 0xSwego</div>
