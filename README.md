@@ -16,3 +16,8 @@ A basic strategy to monitor any bridge health is to keep an eye on inflows vs ou
 - If `inflows > outflows + threshold`, it would seem that the bridge is unlocking funds slowly or not at all and **caution is recommended**.
 
 Another strategy might be to monitor bridge-specific aspects. To keep it simple, I'll check whether the relayer is `paused`. If that was the case, the bridge would become unusable and it would be best to wait some time before of using it.
+
+
+## Live at..
+
+The project is live [here](https://optimism-bridge-health-checker.onrender.com/)
