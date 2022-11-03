@@ -35,7 +35,7 @@ export const App = () => {
                 </div>
             </div>
 
-            <div className="credits">By 0xSwego</div>
+            <div className="credits">By 0xSwego, code <a href="https://github.com/0xSwego/OptimismBridgeHealthChecker">here</a></div>
         </div>
     );
 };
