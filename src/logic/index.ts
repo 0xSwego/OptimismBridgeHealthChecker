@@ -43,8 +43,9 @@ export async function* CheckOptimismBridgeStatus(): AsyncGenerator<IStatus> {
         yield { severity: Severity.Checking, text: "Retrieving flow for L2 bridge..." };
         const l2Stats = await CheckL2Flows();
 
-        if (l2Stats.deposited.gt(l1Stats.deposited)) {
+        if (l2Stats.deposited.gt(l1Stats.deposited.mul(102).div(100))) {
             // The number of ETH withdrawn in the L2 is greater than the amount deposited in the L1
+            // We've added a 2% threshold to take into account issues due to the delay
             const text = "Amount of ETH withdrawn higher than the amount deposited. Possible hack.";
             yield { severity: Severity.Danger, text };
             return;
@@ -104,7 +105,7 @@ const CheckL1Flows = async (): Promise<{ deposited: BigNumber; withdrawn: BigNum
     const withdrawalsSum = withdrawals.reduce((prev, curr) => prev.add(curr), BigNumber.from(0));
 
     console.log({
-        _message: "ETH stats for the last 600 blocks",
+        _message: "ETH stats for the last 24h",
         deposits: bigNumberToFloat(depositsSum),
         withdrawals: bigNumberToFloat(withdrawalsSum)
     });
@@ -140,7 +141,7 @@ const CheckL2Flows = async (): Promise<{ deposited: BigNumber; withdrawn: BigNum
     const withdrawalsSum = withdrawals.reduce((prev, curr) => prev.add(curr), BigNumber.from(0));
 
     console.log({
-        _message: "ETH stats for the last 600 blocks",
+        _message: "ETH stats for the last 24h",
         deposits: bigNumberToFloat(depositsSum),
         withdrawals: bigNumberToFloat(withdrawalsSum)
     });
